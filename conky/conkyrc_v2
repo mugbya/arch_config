@@ -1,0 +1,151 @@
+background yes
+use_xft yes
+override_utf8_locale yes
+xftfont WenQuanYi Micro Hei:size=9 
+# xftfont Terminus:size=9
+xftalpha 0.8
+update_interval 7.0
+total_run_times 0
+own_window yes
+own_window_type override 
+own_window_transparent yes
+own_window_hints undecorated,below,sticky,skip_taskbar,skip_pager
+double_buffer yes
+minimum_size 250 10
+maximum_width 200
+draw_shades no
+draw_outline no
+draw_borders no
+draw_graph_borders yes
+#default_color white
+#default_color AD7FA8
+default_color AD7FA8
+default_shade_color black
+alignment top_left
+gap_x 7
+gap_y 17
+no_buffers yes
+cpu_avg_samples 3
+uppercase no
+use_spacer none
+ 
+TEXT
+######## - CLOCK - #######
+#### 相应的conky-colors配置参数--clock=lucky 可以选择其他的时间显示样式 ###
+### 把O改为P、Q、R、S、T可以得到其他款式的时钟盘面，包括有罗马数字，阿拉伯数字，带外圈等 ###
+${voffset 4}${goto 6}${font clockfaces:size=60}O${font}
+### 分针和时针的字体设置 也可以替换为 aClock_Hour 和 aClock_Min 字体 ###
+${voffset -48}${goto 23}${font zoraclockH:size=40}${color2}${execpi 120 /usr/share/conkycolors/bin/conkyClock hour}${color}${font}
+${voffset -54}${goto 10}${font zoraclockM:size=60}${color2}${execpi 60 /usr/share/conkycolors/bin/conkyClock minute}${color}${font}
+${goto 95}${voffset -63}${font DotMatrix:style=Bold:size=33}${time %H:%M}${font}
+     #${font DotMatrix:size=13}:${time %S}${font}
+${goto 95}${color #8AE234}$hr${color}
+${goto 95}${alignc 38}${font WenQuanYi Micro Hei:size=11}${time %A %b %d日}${font}
+
+${color #FCE94F}${font 321impact:size=9}基本信息$stippled_hr${font}${color}
+#KERNEL: $alignr $kernel
+#UPTIME: $alignr $uptime
+#${color #8AE234}${font 321impact:size=10}SYSTEM${font}$stippled_hr${color}
+######### - CALENDAR - #########
+${color #4E9A06}Battery: ${battery_time BAT0}${alignr}${battery_percent BAT0}%${battery_bar 8,50 BAT0} 
+#${execi 99999 cat /proc/cpuinfo | grep "model name" -m1 | cut -d":" -f2 | cut -d" " -f2- | sed 's#Processor ##'}
+#CPU运行情况
+CPU:${cpu cpu}%              ${acpitemp}°C  ${alignr}Freq:${freq}
+${cpugraph cpu cpu}${alignr}
+CPU1: ${cpu cpu1}%  ${alignr} CPU2: ${cpu cpu2}%
+#${cpubar 4,95 cpu1}${alignr}
+屏幕亮度：${ibm_brightness}${alignr} 风扇转速：${ibm_fan}
+${color #FCE94F}${font 321impact:size=9}无线网络$stippled_hr${font}${color}
+${color #C4A000}Down ${downspeed wlp3s0} k/s ${alignr}Up ${upspeed wlp3s0}k/s
+${downspeedgraph wlp3s0 10,95} ${alignr}${upspeedgraph wlp3s0 10,95}
+Total ${totaldown wlp3s0} ${alignr}Total ${totalup wlp3s0}${color}
+${voffset -2}${color0}${font ConkyColors:size=13}j${font}${color}${goto 32}${voffset -4}本地 IP: ${alignr}${color2}${addr wlp3s0}${color}
+${offset 27}${voffset -2}${font WenQuanYi Zen Hei:pixelsize=12}公网IP:${alignr}${execi 600 w3m -no-cookie -dump http://members.3322.org/dyndns/getip|grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}'}
+#${color #34E2E2}${font 321impact:size=10}TOP${font}$stippled_hr${color}
+######## - NETWORK - #########
+### 相应的conky-colors配置参数--network 也可以设置无限网络 --wireless ###
+${voffset 4}${font 321impact:size=9}${color #FCE94F}拨号网络 $stippled_hr${color}${font}
+# |--WLAN0
+${if_up wlan0}
+${voffset -15}${color0}${font VariShapes Solid:size=14}q${font}${color}${goto 32}${voffset -6}上传 Up: ${font Droid Sans:style=Bold:size=8}${color1}${upspeed wlan0}${color}${font} ${alignr}${color2}${upspeedgraph wlan0 8,60 CE5C00 E07A1F}${color}
+${goto 32}总计 Total: ${font Droid Sans:style=Bold:size=8}${color2}${totalup wlan0}${color}${font}
+${voffset -2}${color0}${font VariShapes Solid:size=14}Q${font}${color}${goto 32}${voffset -6}下载 Down: ${font Droid Sans:style=Bold:size=8}${color1}${downspeed wlan0}${color}${font} ${alignr}${color2}${downspeedgraph wlan0 8,60 CE5C00 E07A1F}${color}
+${goto 32}总计 Total: ${font Droid Sans:style=Bold:size=8}${color2}${totaldown wlan0}${color}${font}
+${voffset -2}${color0}${font Poky:size=14}Y${font}${color}${goto 32} ${voffset -2}信号 Signal: ${font Droid Sans:style=Bold:size=8}${color1}${wireless_link_qual wlan0}%${color}${font} ${alignr}${color2}${wireless_link_bar 8,60 wlan0}${color}
+${voffset 4}${color0}${font Poky:size=13}w${font}${color}${goto 32}${voffset -8}Local  本地 IP: ${alignr}${color2}${addr wlan0}${color}
+${goto 32}Public 对外 IP: ${alignr}${color2}${execi 10800 /usr/share/conkycolors/bin/conkyIp}${color}
+# |--ETH0
+${else}${if_up eth0}
+${voffset -15}${color0}${font VariShapes Solid:size=14}q${font}${color}${goto 32}${voffset -6}上传 Up: ${font Droid Sans:style=Bold:size=8}${color1}${upspeed eth0}${color}${font} ${alignr}${color2}${upspeedgraph eth0 8,60 CE5C00 E07A1F}${color}
+${goto 32}总计 Total: ${font Droid Sans:style=Bold:size=8}${color2}${totalup eth0}${color}${font}
+${voffset -2}${color0}${font VariShapes Solid:size=14}Q${font}${color}${goto 32}${voffset -6}下载 Down: ${font Droid Sans:style=Bold:size=8}${color1}${downspeed eth0}${color}${font} ${alignr}${color2}${downspeedgraph eth0 8,60 CE5C00 E07A1F}${color}
+${goto 32}总计 Total: ${font Droid Sans:style=Bold:size=8}${color2}${totaldown eth0}${color}${font}
+${voffset -2}${color0}${font Poky:size=13}w${font}${color}${goto 32}${voffset -4}Local  本地 IP: ${alignr}${color2}${addr eth0}${color}
+${goto 32}Public 对外 IP: ${alignr}${color2}${execi 10800 /usr/share/conkycolors/bin/conkyIp}${color}
+# |--PPP0
+${else}${if_up ppp0}
+${voffset -15}${color0}${font VariShapes Solid:size=14}q${font}${color}${goto 32}${voffset -6}上传 Up: ${font Droid Sans:style=Bold:size=8}${color1}${upspeed ppp0}${color}${font} ${alignr}${color2}${upspeedgraph ppp0 8,60 CE5C00 E07A1F}${color}
+${goto 32}总计 Total: ${font Droid Sans:style=Bold:size=8}${color2}${totalup ppp0}${color}${font}
+${voffset -2}${color0}${font VariShapes Solid:size=14}Q${font}${color}${goto 32}${voffset -6}下载 Down: ${font Droid Sans:style=Bold:size=8}${color1}${downspeed ppp0}${color}${font} ${alignr}${color2}${downspeedgraph ppp0 8,60 CE5C00 E07A1F}${color}
+${goto 32}总计 Total: ${font Droid Sans:style=Bold:size=8}${color2}${totaldown ppp0}${color}${font}
+${voffset -2}${color0}${font ConkyColors:size=13}j${font}${color}${goto 32}${voffset -4}本地IP: ${alignr}${color2}${addr ppp0}${color}
+${offset 27}${voffset -2}${font WenQuanYi Zen Hei:pixelsize=12}公网IP:${alignr}${execi 600 w3m -no-cookie -dump http://members.3322.org/dyndns/getip|grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}'}
+${else}${voffset 4}${color0}${font ConkyColors:size=12}q${font}${color}${goto 32}无拨号网络 Network Unavailable${voffset 14}${endif}${endif}${endif}
+###运行中的程序
+${color #FCE94F}${font 321impact:size=9}运行程序$stippled_hr${font}${color}
+${color #06989A}App Name ${alignr} PID    CPU%   MEM%${color}
+${color #FB0808} ${top name 1} ${alignr} ${top pid 1} ${top cpu 1} ${top mem 1}$color
+${color #F6620C} ${top name 2} ${alignr} ${top pid 2} ${top cpu 2} ${top mem 2}${color}
+${color #F6E80C} ${top name 3} ${alignr} ${top pid 3} ${top cpu 3} ${top mem 3}${color}
+${color #08CB2F} ${top name 4} ${alignr} ${top pid 4} ${top cpu 4} ${top mem 4}
+${color #0DBCCE} ${top name 5} ${alignr} ${top pid 5} ${top cpu 5} ${top mem 5}
+${color #2758CF} ${top name 6} ${alignr} ${top pid 6} ${top cpu 6} ${top mem 6}
+#$stippled_hr
+#Mem usage$color
+#${color #ddaa00} ${top_mem name 1} $alignr ${top_mem pid 1} ${top_mem cpu 1} ${top_mem mem 1}$color
+# ${top_mem name 2} $alignr ${top_mem pid 2} ${top_mem cpu 2} ${top_mem mem 2}
+# ${top_mem name 3} $alignr ${top_mem pid 3} ${top_mem cpu 3} ${top_mem mem 3}
+#${color #8AE234}${font 321impact:size=10}MUSIC${font}$stippled_hr${color}
+#${color 464646}${alignc 4}${font DejaVu Sans Mono:size=20}${execi 1 ~/.scripts/mpd.awk}
+#${font}${color ff0000}${alignc}${voffset -15}${mpd_status}
+#${color 002ba6}Artist:
+#${color 464646}${mpd_artist}
+#${color #8AE234}${mpd_artist}
+#${color 002ba6}Title:
+#${color #8AE234}${mpd_title}
+#${color 002ba6}Album:
+#${color 464646}${mpd_album}
+#${color #8AE234}${mpd_album}
+#${color #8AE234}${mpd_elapsed}${alignr}${mpd_length}
+#${color 1A1A1A}${mpd_bar 3,201}
+#${color #8AE234}${mpd_bar 3,201}
+#Restore:Mod+Ctl+n
+#下一个窗口:Mod+j
+#电信3G无线网卡上网：wvdial gnome-ppp
+${color #FCE94F}${font 321impact:size=9}日历$stippled_hr${font}${color}
+${color #F6620C}${font WenQuanYi Zen Hei:pixelsize=12}${alignc}日  一  二  三  四   五   六${font}
+${color #cccccc}${font DejaVu Sans Mono:pixelsize=12}${execpi 300 DJS=`date +%_d`; cal | sed '1d' | sed '/./!d' | sed 's/$/ /' | fold -w 21 | sed -n '/^.\{21\}/p' | sed 's/^/${alignc} /' | sed /" $DJS "/s/" $DJS "/" "'${color gold}'"$DJS"'${color 8F8F8F}'" "/}${font}
+#${color c6c6c6}${cpugraph cpu1 20,120 262626 1E1E1E}${color}
+#RAM: $alignr $mem/$memmax
+#${membar 3}
+#Swap: $alignr $swap / $swapmax
+#${swapbar 3}${color}
+#${color #729FCF}${font 321impact:size=10}STORAGE${font}$stippled_hr${color}
+###### - HD - ######
+${color #FCE94F}${font 321impact:size=9}硬盘$stippled_hr${font}${color}
+sda: Write: ${diskio_write /dev/sda} ${alignr}Read: ${diskio_read /dev/sda}
+${diskiograph_write /dev/sda 5,95} ${alignr}${diskiograph_read /dev/sda 5,95}
+sdb: Write: ${diskio_write /dev/sdb}  ${alignr}Read: ${diskio_read /dev/sdb}
+${diskiograph_write /dev/sdb 5,95} ${alignr}${diskiograph_read /dev/sdb 5,95}
+${color #3465A4}Total I/O:Write: $diskio_write ${alignr}Read: $diskio_read
+${diskiograph_write 5,95} ${alignr}${diskiograph_read 5,95}
+#Storage sda: $alignr ${fs_free /mnt/sda6} / ${fs_size /mnt/sda6}
+#${fs_bar 3 /mnt/sda6}
+#Storage sdb: $alignr ${fs_free /} / ${fs_size /}
+#Storage HOME: $alignr ${fs_free /home} / ${fs_size /home}
+#${fs_bar 3 /home}${color}
+#### 相应的conky-colors配置参数--hd=mix 有4种显示方式，或修改最后一行的 conkyHD3 为 conkyHD1 2 4 即可 ###
+#${voffset 4}${font simhei:style=Bold:size=9}硬盘 HD $stippled_hr${font}
+# |--HDTEMP1 ### 硬盘温度 相应的conky-colors配置参数--hdtemp1=sda 表示第一个sata硬盘 ###
+${color0}${font Weather:size=15}y${font}${color}${voffset -3}${goto 32}硬盘温度: ${font Droid Sans:style=Bold:size=9}${color1}${alignr}${execi 120 sudo hddtemp /dev/sda -n --unit=C}°C${color}${font}
+

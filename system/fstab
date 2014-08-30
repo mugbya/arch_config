@@ -1,0 +1,18 @@
+# 
+# /etc/fstab: static file system information
+#
+# <file system>	<dir>	<type>	<options>	<dump>	<pass>
+# UUID=bb55abc1-37b2-416b-b14d-dd39c774efc3
+/dev/sda8           	/         	ext4      	rw,relatime,data=ordered	0 1
+
+# UUID=d8ba6692-8e74-4473-b477-5bd7fd77e1b6
+/dev/sda2           	/boot     	ext4      	rw,relatime,stripe=4,data=ordered	0 2
+
+# 双系统时，开linux自动挂载windows的分区
+# 
+/dev/sda1               /mnt/Confect         ntfs-3g             rw,user                0 2
+/dev/sda3               /mnt/Honey           ntfs-3g             rw,user                0 2
+/dev/sda5               /mnt/Dream           ntfs-3g             rw,user                0 2
+/dev/sda6               /mnt/Effect          ntfs-3g             rw,user                0 2
+/dev/sda7               /mnt/Free            ntfs-3g             rw,user                0 2
+
