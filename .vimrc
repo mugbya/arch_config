@@ -47,6 +47,7 @@ set wrap                         " 自动换行(编辑时)
 
 set t_Co=256
 set term=xterm
+colorscheme ron
 
 set showcmd         " 输入的命令显示出来，看的清楚些 
 set novisualbell    " 不要闪烁(不明白)  
