@@ -8,11 +8,11 @@
 
 -- {{{ Main
 theme = {}
-theme.wallpaper = "/usr/share/awesome/themes/zenburn/zenburn-background.jpg"
+theme.wallpaper = "/home/mugbya/.config/awesome/image/retouched.jpg"
 -- }}}
 
 -- {{{ Styles
-theme.font      = "sans 8"
+theme.font      = "sans 9"
 
 -- {{{ Colors
 theme.fg_normal  = "#DCDCCC"

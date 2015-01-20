@@ -11,6 +11,16 @@ local beautiful = require("beautiful")
 local naughty = require("naughty")
 local menubar = require("menubar")
 
+-- local empathy = require("empathy")
+-- local myutil = require("myutil")
+local fixwidthtextbox = require("fixwidthtextbox")
+-- local menu = require("menu")
+
+os.setlocale("")
+-- A debugging func
+n = function(n) naughty.notify{title="消息", text=tostring(n)} end
+last_bat_warning = 0
+
 -- {{{ Error handling
 -- Check if awesome encountered an error during startup and fell back to
 -- another config (This code will only ever execute for the fallback config)
@@ -38,11 +48,16 @@ end
 
 -- {{{ Variable definitions
 -- Themes define colours, icons, font and wallpapers.
-beautiful.init("/usr/share/awesome/themes/zenburn/theme.lua")
+-- beautiful.init("/usr/share/awesome/themes/zenburn/theme.lua")
+beautiful.init("/home/mugbya/.config/awesome/theme.lua")
+
 
 -- This is used later as the default terminal and editor to run.
 terminal = "xfce4-terminal"
-editor = os.getenv("EDITOR") or "nano"
+-- terminal = "xterm"
+-- editor = os.getenv("EDITOR") or "nano"
+editor = "vim"
+--editor_cmd = editor
 editor_cmd = terminal .. " -e " .. editor
 
 -- Default modkey.
@@ -70,6 +85,79 @@ local layouts =
 }
 -- }}}
 
+-- {{{ Functions
+function get_memory_usage()
+    local ret = {}
+    for l in io.lines('/proc/meminfo') do
+        local k, v = l:match("([^:]+):%s+(%d+)")
+        ret[k] = tonumber(v)
+    end
+    return ret
+end
+
+function string_split(string, pat, plain)
+    local ret = {}
+    local pos = 0
+    local start, stop
+    local t_insert = table.insert
+    while true do
+        start, stop = string:find(pat, pos, plain)
+        if not start then
+            t_insert(ret, string:sub(pos))
+            break
+        end
+        t_insert(ret, string:sub(pos, start-1))
+        pos = stop + 1
+    end
+    return ret
+end
+
+function parse_key(string)
+    local t_insert = table.insert
+    local parts = string_split(string, '[+-]')
+    local last = table.remove(parts)
+    local ret = {}
+    for _, p in ipairs(parts) do
+        p_ = p:lower()
+        local m
+        if p_ == 'ctrl' then
+            m = 'Control'
+        elseif p_ == 'alt' then
+            m = 'Mod1'
+        else
+            m = p
+        end
+        t_insert(ret, m)
+    end
+    return ret, last
+end
+
+_key_map_cache = {}
+function map_client_key(client, key_map)
+    local t_insert = table.insert
+    if _key_map_cache[key_map] then
+        keys = awful.util.table.join(client:keys(), _key_map_cache[key_map])
+    else
+        local keys = {}
+        for from, to in pairs(key_map) do
+            local mod, key = parse_key(from)
+            local key = awful.key(mod, key, function(c)
+                awful.util.spawn(
+                'xdotool key --window '
+                .. c.window .. ' ' .. to)
+            end)
+            for _, k in ipairs(key) do
+                t_insert(keys, k)
+            end
+        end
+        _key_map_cache[key_map] = keys
+        keys = awful.util.table.join(client:keys(), keys)
+    end
+    client:keys(keys)
+end
+--}}}
+
+
 -- {{{ Wallpaper
 if beautiful.wallpaper then
     for s = 1, screen.count() do
@@ -80,7 +168,7 @@ end
 
 -- {{{ Tags
 -- Define a tag table which hold all screen tags.
-tags_name = { " 终端 ", " Chrome ", " ->_-> ", " 文件 ", " haroopad ", " 聊天 ", " GVIM ", " 音乐 ", " 火狐 ", " ^_^ " }
+tags_name = { " 终端 ", " Chrome ", " IDEA ", " 文件 ", " Sublime ", " 聊天 ", " GVIM ", " 音乐 ", " 火狐 ", " ^_^ " }
 tags_layout = {
     awful.layout.suit.tile,
     awful.layout.suit.tile,
@@ -92,7 +180,8 @@ tags_layout = {
     awful.layout.suit.tile,
     awful.layout.suit.tile,
     awful.layout.suit.tile,
-    awful.layout.suit.floating,
+    awful.layout.suit.tile,
+    --awful.layout.suit.floating,
 }
 tags = {}
 revtags = {}
@@ -115,27 +204,43 @@ myawesomemenu = {
 }
 
 local mymenu = {
-	{ " haroopad", "haroopad", '/usr/share/icons/hicolor/32x32/apps/haroopad.png'},
-	{ " Shutter", "shutter",   '/usr/share/icons/hicolor/32x32/apps/shutter.png'},
-	{ " Sublime", "subl",      '/usr/share/icons/hicolor/32x32/apps/sublime_text.png'},
-	{ " &Wireshark", "wireshark", '/usr/share/icons/hicolor/32x32/apps/wireshark.png'},
-	{ " Jitsi", "jitsi", '/usr/share/icons/hicolor/16x16/apps/sc-logo.ico'},
-	{ " 音频控制器", "pavucontrol"},
-	{ " 神器", "intellij-idea-ultimate-edition" , "/usr/share/intellij-idea-ultimate-edition/bin/idea.png"},
-	{ "系统监视器", "gnome-system-monitor"},
-	{ "虚拟机", "virtualbox"}
+  --{ " haroopad", "haroopad", '/usr/share/icons/hicolor/32x32/apps/haroopad.png'},
+  { " Shutter", "shutter",   '/usr/share/icons/hicolor/32x32/apps/shutter.png'},
+  { " Gimp ", "gimp",'/usr/share/icons/hicolor/32x32/apps/gimp.png'},
+  { " Sublime", "subl",      '/usr/share/icons/hicolor/32x32/apps/sublime_text.png'},
+  { " &Wireshark", "wireshark", '/usr/share/icons/hicolor/32x32/apps/wireshark.png'},
+  --{ " Jitsi", "jitsi","/usr/share/pixmaps/jitsi.svg"},
+  { " Pidgin", "pidgin", "/usr/share/icons/hicolor/32x32/apps/pidgin.png"},
+  { " xchat ", "xchat", "/usr/share/pixmaps/xchat.png"},
+  { " 音频控制器", "pavucontrol","/usr/share/icons/gnome/32x32/apps/multimedia-volume-control.png"},
+  { "webstorm ", "jetbrains-webstorm", "/opt/webstorm/bin/webide.png"},
+  { " 神 器 ", "intellij-idea-ultimate-edition" , "/usr/share/intellij-idea-ultimate-edition/bin/idea.png"},
+  { " pycharm ", "pycharm", "/usr/share/pixmaps/pycharm.png"},
+  { " 系统监视器", "gnome-system-monitor", "/usr/share/icons/gnome/48x48/apps/utilities-system-monitor.png"},
+  --{ " wps ", "wps -style gtk+", "/usr/share/icons/hicolor/48x48/apps/wps-office-wpsmain.png"},
+  --{ " Dia ", "dia ", "/usr/share/icons/hicolor/48x48/apps/dia.png"},
+  --{ " Q_Q ", "qq2013", "/opt/longene/qq/qq.png" },
+  { " Q_Q ", "wine /opt/TM2013/drive_c/Program\\ Files/Tencent/TM/Bin/TM.exe", "/opt/longene/qq/qq.png" },
+  --{ " pgadmin3 ","pgadmin3","/usr/share/pgadmin3/pgAdmin3.png"},
+  { " BT ","transmission-gtk","/usr/share/pixmaps/transmission.png"},
+  { " 虚拟机", "virtualbox", "/usr/share/pixmaps/VBox.png"},
+  { " VStudio ","/opt/VStudio/vstudio","/opt/VStudio/Resources/vstudio.png"},
+  { " 百度云盘 ", "bcloud-gui", "/usr/share/bcloud/icons/hicolor/scalable/apps/bcloud.svg"},
+  { " Wuala ","wuala","/usr/share/icons/hicolor/64x64/apps/wuala.png"},
+ -- { " eclipse ", "/opt/eclipse/eclipse", "/opt/eclipse/icon.xpm"},
+  --{ " 0ad ", "0ad -mod=east-asian-locales", "/usr/share/pixmaps/0ad.png"}
+
 }
 
 mymainmenu = awful.menu({ items = { { "  Awesome", myawesomemenu, beautiful.awesome_icon },
-                                    { "  终 端 ", terminal,'/usr/share/icons/gnome/32x32/apps/utilities-terminal.png' },
-				    { "  文 件(&T) ", "thunar", '/usr/share/icons/gnome/32x32/apps/system-file-manager.png'},
-				    { "  Chrome(&C)", "google-chrome-stable",'/usr/share/icons/hicolor/32x32/apps/google-chrome.png' },
-				    { "  火 狐(&F)", "firefox", '/usr/share/icons/hicolor/32x32/apps/firefox.png'},
-				    { "  G&VIM", "gvim", '/usr/share/pixmaps/gvim.png' },
-                                    { "  常用工具", mymenu },
-		 	            { "  关机 (&H)", "systemctl poweroff", '/usr/share/icons/gnome/16x16/actions/gtk-quit.png' },
-                                  }
-                        })
+              { "  终 端 ", terminal,'/usr/share/icons/gnome/32x32/apps/utilities-terminal.png' },
+				      { "  文 件(&T) ", "nautilus", '/usr/share/icons/gnome/32x32/apps/system-file-manager.png'},
+				      { "  Chrome(&C)", "google-chrome-stable",'/usr/share/icons/hicolor/32x32/apps/google-chrome.png' },
+				      { "  火 狐(&F)", "firefox", '/usr/share/icons/hicolor/32x32/apps/firefox.png'},
+				      { "  G&VIM", "gvim", '/usr/share/pixmaps/gvim.png' },
+              { "  常用工具", mymenu },
+              { "  关机 (&H)", "systemctl poweroff", '/usr/share/icons/gnome/16x16/actions/gtk-quit.png' },
+          }})
 
 mylauncher = awful.widget.launcher({ image = beautiful.awesome_icon,
                                      menu = mymainmenu })
@@ -148,6 +253,60 @@ menubar.utils.terminal = terminal -- Set the terminal for applications that requ
 -- Create a textclock widget
 --mytextclock = awful.widget.textclock()
 mytextclock = awful.widget.textclock(" %Y年%m月%d日 %H:%M:%S %A ", 1)
+
+
+-- ooo --------------------------------------- 
+-- {{{ memory usage indicator
+function update_memwidget()
+    local meminfo = get_memory_usage()
+    local free
+    if meminfo.MemAvailable then
+        -- Linux 3.14+
+        free = meminfo.MemAvailable
+    else
+        free = meminfo.MemFree + meminfo.Buffers + meminfo.Cached
+    end
+    local total = meminfo.MemTotal
+    local percent = 100 - math.floor(free / total * 100 + 0.5)
+    memwidget:set_markup('Mem <span color="#90ee90">'.. percent ..'%</span>')
+end
+memwidget = fixwidthtextbox('Mem ??')
+memwidget.width = 55
+update_memwidget()
+mem_clock = timer({ timeout = 5 })
+mem_clock:connect_signal("timeout", update_memwidget)
+mem_clock:start()
+-- }}}
+
+
+-- {{{ CPU Temperature
+function update_cputemp()
+    local pipe = io.popen('sensors')
+    if not pipe then
+        cputempwidget:set_markup('CPU <span color="red">ERR</span>℃')
+        return
+    end
+    local temp = 0
+    for line in pipe:lines() do
+        local newtemp = line:match('^Core [^:]+:%s+%+([0-9.]+)°C')
+        if newtemp then
+            newtemp = tonumber(newtemp)
+            if temp < newtemp then
+                temp = newtemp
+            end
+        end
+    end
+    pipe:close()
+    cputempwidget:set_markup('CPU <span color="#008000">'..temp..'</span>℃')
+end
+cputempwidget = fixwidthtextbox('CPU ??℃')
+cputempwidget.width = 60
+update_cputemp()
+cputemp_clock = timer({ timeout = 5 })
+cputemp_clock:connect_signal("timeout", update_cputemp)
+cputemp_clock:start()
+-- }}}
+
 
 -- Create the wibox
 --mywibox[s] = awful.wibox({ position = "top", height = "18", screen = s })
@@ -228,9 +387,13 @@ for s = 1, screen.count() do
     left_layout:add(mytaglist[s])
     left_layout:add(mypromptbox[s])
 
-    -- Widgets that are aligned to the right
+    -- Widgets that are aligned to the right  ooo
     local right_layout = wibox.layout.fixed.horizontal()
-    if s == 1 then right_layout:add(wibox.widget.systray()) end
+
+    -- right_layout:add(memwidget)
+    -- right_layout:add(cputempwidget)
+
+    if s == 1 then right_layout:add(wibox.widget.systray()) end    
     right_layout:add(mytextclock)
     right_layout:add(mylayoutbox[s])
 
@@ -483,3 +646,160 @@ end)
 client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
 client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
 -- }}}
+
+
+
+-- {{{ Signals
+-- Signal function to execute when a new client appears.
+client.connect_signal("manage", function (c, startup)
+    -- Enable sloppy focus
+    c:connect_signal("mouse::enter", function(c)
+        if awful.layout.get(c.screen) ~= awful.layout.suit.magnifier
+            and awful.client.focus.filter(c) then
+            client.focus = c
+        end
+    end)
+
+    if not startup then
+        -- Set the windows at the slave,
+        -- i.e. put it at the end of others instead of setting it master.
+        -- awful.client.setslave(c)
+
+        -- Put windows in a smart way, only if they does not set an initial position.
+        if not c.size_hints.user_position and not c.size_hints.program_position then
+            awful.placement.no_overlap(c)
+            awful.placement.no_offscreen(c)
+        end
+    end
+
+    local titlebars_enabled = false
+    if titlebars_enabled and (c.type == "normal" or c.type == "dialog") then
+        -- buttons for the titlebar
+        local buttons = awful.util.table.join(
+                awful.button({ }, 1, function()
+                    client.focus = c
+                    c:raise()
+                    awful.mouse.client.move(c)
+                end),
+                awful.button({ }, 3, function()
+                    client.focus = c
+                    c:raise()
+                    awful.mouse.client.resize(c)
+                end)
+                )
+
+        -- Widgets that are aligned to the left
+        local left_layout = wibox.layout.fixed.horizontal()
+        left_layout:add(awful.titlebar.widget.iconwidget(c))
+        left_layout:buttons(buttons)
+
+        -- Widgets that are aligned to the right
+        local right_layout = wibox.layout.fixed.horizontal()
+        right_layout:add(awful.titlebar.widget.floatingbutton(c))
+        right_layout:add(awful.titlebar.widget.maximizedbutton(c))
+        right_layout:add(awful.titlebar.widget.stickybutton(c))
+        right_layout:add(awful.titlebar.widget.ontopbutton(c))
+        right_layout:add(awful.titlebar.widget.closebutton(c))
+
+        -- The title goes in the middle
+        local middle_layout = wibox.layout.flex.horizontal()
+        local title = awful.titlebar.widget.titlewidget(c)
+        title:set_align("center")
+        middle_layout:add(title)
+        middle_layout:buttons(buttons)
+
+        -- Now bring it all together
+        local layout = wibox.layout.align.horizontal()
+        layout:set_left(left_layout)
+        layout:set_right(right_layout)
+        layout:set_middle(middle_layout)
+
+        awful.titlebar(c):set_widget(layout)
+    end
+end)
+
+client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
+client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
+-- }}}
+
+------------------------------------------------
+
+function myfocus_filter(c)
+  if awful.client.focus.filter(c) then
+    -- This works with tooltips and some popup-menus
+    if c.class == 'Wine' and c.above == true then
+      return nil
+    elseif c.class == 'Wine'
+      and c.type == 'dialog'
+      and c.skip_taskbar == true
+      and c.size_hints.max_width and c.size_hints.max_width < 160
+      then
+      -- for popup item menus of Photoshop CS5
+      return nil
+    else
+      return c
+    end
+  end
+end
+
+awful.rules.rules = {
+  -- All clients will match this rule.
+  {
+    rule = { },
+    properties = {
+      -- 这里使用我们自己的函数
+      focus = myfocus_filter,
+      -- 以下是默认的部分
+      border_width = beautiful.border_width,
+      border_color = beautiful.border_normal,
+      keys = clientkeys,
+      buttons = clientbuttons,
+    }
+  }, {
+    rule_any = { 
+      instance = {'TM.exe', 'QQ.exe'},
+    },
+    properties = {
+      -- This, together with myfocus_filter, make the popup menus flicker taskbars less
+      -- Non-focusable menus may cause TM2013preview1 to not highlight menu
+      -- items on hover and crash.
+      focusable = true,
+      floating = true,
+      -- 去掉边框
+      border_width = 0,
+    }
+  }, {
+    -- 其它规则
+  }
+}
+
+alt_switch_keys = awful.util.table.join(
+    -- it's easier for a vimer to manage this than figuring out a nice way to loop and concat
+    awful.key({'Mod1'}, 1, function(c) awful.util.spawn('xdotool key --window ' .. c.window .. ' ctrl+1') end),
+    awful.key({'Mod1'}, 2, function(c) awful.util.spawn('xdotool key --window ' .. c.window .. ' ctrl+2') end),
+    awful.key({'Mod1'}, 3, function(c) awful.util.spawn('xdotool key --window ' .. c.window .. ' ctrl+3') end),
+    awful.key({'Mod1'}, 4, function(c) awful.util.spawn('xdotool key --window ' .. c.window .. ' ctrl+4') end),
+    awful.key({'Mod1'}, 5, function(c) awful.util.spawn('xdotool key --window ' .. c.window .. ' ctrl+5') end),
+    awful.key({'Mod1'}, 6, function(c) awful.util.spawn('xdotool key --window ' .. c.window .. ' ctrl+6') end),
+    awful.key({'Mod1'}, 7, function(c) awful.util.spawn('xdotool key --window ' .. c.window .. ' ctrl+7') end),
+    awful.key({'Mod1'}, 8, function(c) awful.util.spawn('xdotool key --window ' .. c.window .. ' ctrl+8') end),
+    awful.key({'Mod1'}, 9, function(c) awful.util.spawn('xdotool key --window ' .. c.window .. ' ctrl+9') end)
+)
+function bind_alt_switch_tab_keys(client)
+    client:keys(awful.util.table.join(client:keys(), alt_switch_keys))
+end -- }}}
+
+client.connect_signal("manage", function (c, startup)
+  -- 其它配置
+
+  if c.instance == 'TM.exe' then
+    -- 添加 Alt+n 支持
+    bind_alt_switch_tab_keys(c)
+    -- 关闭各类新闻通知小窗口
+    if c.name and c.name:match('^腾讯') and c.above then
+      c:kill()
+    end
+  end
+
+  -- 其它配置
+end)
